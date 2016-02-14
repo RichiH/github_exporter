@@ -5,7 +5,6 @@ use warnings;
 use diagnostics;
 
 use Data::Dumper;
-#use parent 'Prometheus';
 
 # TODO track internal errors
 
@@ -35,7 +34,6 @@ sub add {
 
 sub get_string {
 	my $self = shift;
-#	bless $self;
 
 	my $output = "# TYPE $self->{name} gauge\n";
 	$output   .= "# HELP $self->{name} $self->{help}\n" if defined $self->{help};

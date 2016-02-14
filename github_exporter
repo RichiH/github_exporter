@@ -110,7 +110,7 @@ foreach my $repository (@{$config->{repositories}}) {
 	die "Could not get $url: $!" unless defined $json;
 	my $decoded_json = decode_json( $json );
 
-	$repo_info->add(labels =>
+	$repo_info->set(labels =>
 	                         "repository_full_name=\"$decoded_json->{full_name}\""
 	                        .",repository_name=\"$decoded_json->{name}\""
 	                        .",repository_description=\"$decoded_json->{description}\""
@@ -119,52 +119,52 @@ foreach my $repository (@{$config->{repositories}}) {
 	                value => $decoded_json->{id}
 	           );
 
-	$repo_private->add(labels => "github_repository_private_bool{full_name=\"$decoded_json->{full_name}\"}",
+	$repo_private->set(labels => "full_name=\"$decoded_json->{full_name}\"",
 	                   value  => $decoded_json->{private});
 
-	$repo_forked->add(labels => "github_repository_private_bool{full_name=\"$decoded_json->{full_name}\"}",
+	$repo_forked->set(labels => "full_name=\"$decoded_json->{full_name}\"",
 	                  value  => $decoded_json->{fork});
 
-	$repo_created->add(labels => "github_repository_created_timestamp{full_name=\"$decoded_json->{full_name}\"}",
+	$repo_created->set(labels => "full_name=\"$decoded_json->{full_name}\"",
 	            value  => str2time($decoded_json->{created_at}));
 
-	$repo_updated->add(labels => "github_repository_updated_timestamp{full_name=\"$decoded_json->{full_name}\"}",
+	$repo_updated->set(labels => "full_name=\"$decoded_json->{full_name}\"",
 	            value  => str2time($decoded_json->{updated_at}));
 
-	$repo_pushed->add(labels => "github_repository_pushed_timestamp{full_name=\"$decoded_json->{full_name}\"}",
+	$repo_pushed->set(labels => "full_name=\"$decoded_json->{full_name}\"",
 	            value  => str2time($decoded_json->{pushed_at}));
 
-	$repo_size->add(labels => "github_repository_size{full_name=\"$decoded_json->{full_name}\"}",
+	$repo_size->set(labels => "full_name=\"$decoded_json->{full_name}\"",
 	            value  => $decoded_json->{size});
 
-	$repo_stargazers->add(labels => "github_repository_stargazers_count{full_name=\"$decoded_json->{full_name}\"}",
+	$repo_stargazers->set(labels => "full_name=\"$decoded_json->{full_name}\"",
 	            value  => $decoded_json->{stargazers_count});
 
-	$repo_watchers->add(labels => "github_repository_watchers_count{full_name=\"$decoded_json->{full_name}\"}",
+	$repo_watchers->set(labels => "full_name=\"$decoded_json->{full_name}\"",
 	            value  => $decoded_json->{watchers_count});
 
-	$repo_has_issues->add(labels => "github_repository_has_issues_bool{full_name=\"$decoded_json->{full_name}\"}",
+	$repo_has_issues->set(labels => "full_name=\"$decoded_json->{full_name}\"",
 	            value  => $decoded_json->{has_issues});
 
-	$repo_has_downloads->add(labels => "github_repository_has_downloads_bool{full_name=\"$decoded_json->{full_name}\"}",
+	$repo_has_downloads->set(labels => "full_name=\"$decoded_json->{full_name}\"",
 	            value  => $decoded_json->{has_downloads});
 
-	$repo_has_wiki->add(labels => "github_repository_has_wiki_bool{full_name=\"$decoded_json->{full_name}\"}",
+	$repo_has_wiki->set(labels => "full_name=\"$decoded_json->{full_name}\"",
 	            value  => $decoded_json->{has_wiki});
 
-	$repo_has_pages->add(labels => "github_repository_has_pages_bool{full_name=\"$decoded_json->{full_name}\"}",
+	$repo_has_pages->set(labels => "full_name=\"$decoded_json->{full_name}\"",
 	            value  => $decoded_json->{has_pages});
 
-	$repo_forks->add(labels => "github_repository_forks_count{full_name=\"$decoded_json->{full_name}\"}",
+	$repo_forks->set(labels => "full_name=\"$decoded_json->{full_name}\"",
 	            value  => $decoded_json->{forks_count});
 
-	$repo_open_issues->add(labels => "github_repository_open_issues_count{full_name=\"$decoded_json->{full_name}\"}",
+	$repo_open_issues->set(labels => "full_name=\"$decoded_json->{full_name}\"",
 	            value  => $decoded_json->{open_issues_count});
 
-	$repo_network_count->add(labels => "github_repository_network_count{full_name=\"$decoded_json->{full_name}\"}",
+	$repo_network_count->set(labels => "full_name=\"$decoded_json->{full_name}\"",
 	            value  => $decoded_json->{network_count});
 
-	$repo_subscribers->add(labels => "github_repository_subscribers_count{full_name=\"$decoded_json->{full_name}\"}",
+	$repo_subscribers->set(labels => "full_name=\"$decoded_json->{full_name}\"",
 	            value  => $decoded_json->{subscribers_count});
 }
 

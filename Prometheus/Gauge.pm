@@ -23,14 +23,15 @@ sub new {
 	return $self;
 }
 
-sub add {
+sub set {
 	my $self = shift;
 	my %options = @_;
 
 	die "Value '$options{value}' is empty\n" unless defined $options{value};
 	die "Value '$options{value}' is not a float\n" unless $options{value} =~ /^  [+-]? ( (\d+ (\.\d*)?)  |  (\.\d+) ) $/x;
 
-	$self->{text} .= $self->{name}. "{". $options{labels}. "} $options{value}\n";
+	#$self->{text} .= $self->{name}. "{". $options{labels}. "} $options{value}\n";
+	$self->{metrics}{$options{labels}} = $options{value};
 }
 
 sub get_string {
@@ -38,7 +39,9 @@ sub get_string {
 
 	my $output = "# TYPE $self->{name} gauge\n";
 	$output   .= "# HELP $self->{name} $self->{help}\n" if defined $self->{help};
-	$output   .= $self->{text};
+	foreach my $metric (sort(keys %{$self->{metrics}})) {
+		$output   .= "$self->{name}\{$metric} " . $self->{metrics}{$metric} . "\n";
+	}
 
 	return $output;
 }

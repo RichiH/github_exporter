@@ -1,0 +1,125 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use Data::Dumper;
+
+use Config::YAML;
+use Date::Parse;
+use JSON;
+use LWP::Simple;
+
+use Prometheus::Gauge;
+
+my $config = Config::YAML->new( config => "github_exporter.yml");
+
+my $repo_info=Prometheus::Gauge->new(
+	name => 'github_repository_info',
+	help => 'Information about repository');
+
+my $repo_private=Prometheus::Gauge->new(
+	name => 'github_repository_private_bool',
+	help => 'Is repository set to private?');
+
+
+my $output = "
+# TYPE github_repository_forked_bool gauge
+# HELP github_repository_forked_bool Has this repository been forked?
+# TYPE github_repository_created_timestamp gauge
+# HELP github_repository_created_timestamp Epoch of repository creation
+# TYPE github_repository_updated_timestamp gauge
+# HELP github_repository_updated_timestamp Epoch of last repository update
+# TYPE github_repository_pushed_timestamp gauge
+# HELP github_repository_pushed_timestamp Epoch of last push to repository
+# TYPE github_repository_size gauge
+# HELP github_repository_size I have no idea; send email or patches...
+# TYPE github_repository_stargazers_count gauge
+# HELP github_repository_stargazers_count Count of people who starred a repository
+# TYPE github_repository_watchers_count gauge
+# HELP github_repository_watchers_count Count of people who watch a repository
+# TYPE github_repository_has_issues_bool gauge
+# HELP github_repository_has_issues_bool Are issues enabled for this repository?
+# TYPE github_repository_has_downloads_bool gauge
+# HELP github_repository_has_downloads_bool Are downloads available for this repository?
+# TYPE github_repository_has_wiki_bool gauge
+# HELP github_repository_has_wiki_bool Is the wiki enabled for this repository?
+# TYPE github_repository_has_pages_bool gauge
+# HELP github_repository_has_pages_bool Are GitHub pages enabled?
+# TYPE github_repository_forks_count gauge
+# HELP github_repository_forks_count Amount of existing forks
+# TYPE github_repository_open_issues_count gauge
+# HELP github_repository_open_issues_count How many open issues exist
+# TYPE github_repository_forks_count gauge
+# HELP github_repository_forks_count How many forks exist
+# TYPE github_repository_network_count gauge
+# HELP github_repository_network_count I have an idea; if you _know_ let me know
+# TYPE github_repository_subscribers_count gauge
+# HELP github_repository_subscribers_count
+\n";
+
+foreach my $repository (@{$config->{repositories}}) {
+	my $url="https://api.github.com/repos/$repository";
+	my $json = get($url);
+
+	#TODO count up errors instead of dying once this becomes a daemon
+	die "Could not get $url: $!" unless defined $json;
+	my $decoded_json = decode_json( $json );
+
+	$repo_info->add(labels =>
+	                         "repository_full_name=\"$decoded_json->{full_name}\""
+	                        .",repository_name=\"$decoded_json->{name}\""
+	                        .",repository_description=\"$decoded_json->{description}\""
+	                        .",owner_name=\"$decoded_json->{owner}{login}\""
+	                        .",owner_id=\"$decoded_json->{owner}{id}",
+	                value => $decoded_json->{id}
+	           );
+
+	$repo_private->add(labels => "github_repository_private_bool{full_name=\"$decoded_json->{full_name}\"}",
+	                   value  => $decoded_json->{private});
+
+	$output .= "github_repository_forked_bool{full_name=\"$decoded_json->{full_name}\"} $decoded_json->{fork}\n";
+
+	$output .= "github_repository_created_timestamp{full_name=\"$decoded_json->{full_name}\"} ".str2time($decoded_json->{created_at})."\n";
+
+	$output .= "github_repository_updated_timestamp{full_name=\"$decoded_json->{full_name}\"} ".str2time($decoded_json->{updated_at})."\n";
+
+	$output .= "github_repository_pushed_timestamp{full_name=\"$decoded_json->{full_name}\"} ".str2time($decoded_json->{pushed_at})."\n";
+
+	$output .= "github_repository_size{full_name=\"$decoded_json->{full_name}\"} $decoded_json->{size}\n";
+
+	$output .= "github_repository_stargazers_count{full_name=\"$decoded_json->{full_name}\"} $decoded_json->{stargazers_count}\n";
+
+	$output .= "github_repository_watchers_count{full_name=\"$decoded_json->{full_name}\"} $decoded_json->{watchers_count}\n";
+
+	$output .= "github_repository_has_issues_bool{full_name=\"$decoded_json->{full_name}\"} $decoded_json->{has_issues}\n";
+
+	$output .= "github_repository_has_downloads_bool{full_name=\"$decoded_json->{full_name}\"} $decoded_json->{has_downloads}\n";
+
+	$output .= "github_repository_has_wiki_bool{full_name=\"$decoded_json->{full_name}\"} $decoded_json->{has_wiki}\n";
+
+	$output .= "github_repository_has_pages_bool{full_name=\"$decoded_json->{full_name}\"} $decoded_json->{has_pages}\n";
+
+	$output .= "github_repository_forks_count{full_name=\"$decoded_json->{full_name}\"} $decoded_json->{forks_count}\n";
+
+	$output .= "github_repository_open_issues_count{full_name=\"$decoded_json->{full_name}\"} $decoded_json->{open_issues_count}\n";
+
+	$output .= "github_repository_forks_count{full_name=\"$decoded_json->{full_name}\"} $decoded_json->{forks}\n";
+
+	$output .= "github_repository_network_count{full_name=\"$decoded_json->{full_name}\"} $decoded_json->{network_count}\n";
+
+	$output .= "github_repository_subscribers_count{full_name=\"$decoded_json->{full_name}\"} $decoded_json->{subscribers_count}\n";
+}
+
+$output .= $repo_info->print;
+$output .= $repo_private->print;
+
+
+print $output;
+
+#my @curl = ('curl', '-X', 'POST', '--data-binary', $output, 'http://localhost:9091/metrics/job/github_exporter');
+#unless (system (@curl) == 0) {
+#	print "ERROR: $!\n";
+#	# TODO If this becomes a long-running process, we should expose this. But then, I wouldn't be using curl, so meh
+#}
+

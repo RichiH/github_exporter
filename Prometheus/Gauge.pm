@@ -2,6 +2,7 @@ package Prometheus::Gauge;
 
 use strict;
 use warnings;
+use diagnostics;
 
 use Data::Dumper;
 #use parent 'Prometheus';
@@ -11,7 +12,7 @@ use Data::Dumper;
 sub new {
 	my $class = shift;
 	my %options = @_;
-	die "\$name must not be empty\n" unless defined $options{name};
+	die "Prometheus::Gauge: \$name must not be empty\n" unless defined $options{name};
 
 	my $self = {
 #		help => 'No help provided',
@@ -32,12 +33,15 @@ sub add {
 	$self->{text} .= $self->{name}. "{". $options{labels}. "} $options{value}\n";
 }
 
-sub print {
+sub get_string {
 	my $self = shift;
+#	bless $self;
 
-	print "# TYPE $self->{name} gauge\n";
-	print "# HELP $self->{name} $self->{help}\n" if defined $self->{help};
-	print $self->{text};
+	my $output = "# TYPE $self->{name} gauge\n";
+	$output   .= "# HELP $self->{name} $self->{help}\n" if defined $self->{help};
+	$output   .= $self->{text};
+
+	return $output;
 }
 
 

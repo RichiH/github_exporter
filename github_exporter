@@ -10,53 +10,97 @@ use Date::Parse;
 use JSON;
 use LWP::Simple;
 
-use Prometheus::Gauge;
+#use Prometheus::Gauge;
+use Prometheus;
 
 my $config = Config::YAML->new( config => "github_exporter.yml");
 
-my $repo_info=Prometheus::Gauge->new(
+my $prom = Prometheus->new();
+
+my $repo_info=$prom->gauge(
 	name => 'github_repository_info',
-	help => 'Information about repository');
+	help => 'Information about repository',
+);
 
-my $repo_private=Prometheus::Gauge->new(
+my $repo_private=$prom->gauge(
 	name => 'github_repository_private_bool',
-	help => 'Is repository set to private?');
+	help => 'Is repository set to private?',
+);
 
+my $repo_forked=$prom->gauge(
+	name => 'github_repository_forked_bool',
+	help => 'Has repository been forked?',
+);
 
-my $output = "
-# TYPE github_repository_forked_bool gauge
-# HELP github_repository_forked_bool Has this repository been forked?
-# TYPE github_repository_created_timestamp gauge
-# HELP github_repository_created_timestamp Epoch of repository creation
-# TYPE github_repository_updated_timestamp gauge
-# HELP github_repository_updated_timestamp Epoch of last repository update
-# TYPE github_repository_pushed_timestamp gauge
-# HELP github_repository_pushed_timestamp Epoch of last push to repository
-# TYPE github_repository_size gauge
-# HELP github_repository_size I have no idea; send email or patches...
-# TYPE github_repository_stargazers_count gauge
-# HELP github_repository_stargazers_count Count of people who starred a repository
-# TYPE github_repository_watchers_count gauge
-# HELP github_repository_watchers_count Count of people who watch a repository
-# TYPE github_repository_has_issues_bool gauge
-# HELP github_repository_has_issues_bool Are issues enabled for this repository?
-# TYPE github_repository_has_downloads_bool gauge
-# HELP github_repository_has_downloads_bool Are downloads available for this repository?
-# TYPE github_repository_has_wiki_bool gauge
-# HELP github_repository_has_wiki_bool Is the wiki enabled for this repository?
-# TYPE github_repository_has_pages_bool gauge
-# HELP github_repository_has_pages_bool Are GitHub pages enabled?
-# TYPE github_repository_forks_count gauge
-# HELP github_repository_forks_count Amount of existing forks
-# TYPE github_repository_open_issues_count gauge
-# HELP github_repository_open_issues_count How many open issues exist
-# TYPE github_repository_forks_count gauge
-# HELP github_repository_forks_count How many forks exist
-# TYPE github_repository_network_count gauge
-# HELP github_repository_network_count I have an idea; if you _know_ let me know
-# TYPE github_repository_subscribers_count gauge
-# HELP github_repository_subscribers_count
-\n";
+my $repo_created=$prom->gauge(
+	name => 'github_repository_created_timestamp',
+	help => 'github_repository_created_timestamp Epoch of repository creation',
+);
+
+my $repo_updated=$prom->gauge(
+	name => 'github_repository_updated_timestamp',
+	help => 'github_repository_updated_timestamp Epoch of last repository update',
+);
+
+my $repo_pushed=$prom->gauge(
+	name => 'github_repository_pushed_timestamp',
+	help => 'github_repository_pushed_timestamp Epoch of last push to repository',
+);
+
+my $repo_size=$prom->gauge(
+	name => 'github_repository_size',
+#	help => '#TODO What is this?',
+);
+
+my $repo_stargazers=$prom->gauge(
+	name => 'github_repository_stargazers_count',
+	help => 'github_repository_stargazers_count Count of people who starred a repository',
+);
+
+my $repo_watchers=$prom->gauge(
+	name => 'github_repository_watchers_count',
+	help => 'github_repository_watchers_count Count of people who watch a repository',
+);
+
+my $repo_has_issues=$prom->gauge(
+	name => 'github_repository_has_issues_bool',
+	help => 'github_repository_has_issues_bool Are issues enabled for this repository?',
+);
+
+my $repo_has_downloads=$prom->gauge(
+	name => 'github_repository_has_downloads_bool',
+	help => 'github_repository_has_downloads_bool Are downloads available for this repository?',
+);
+
+my $repo_has_wiki=$prom->gauge(
+	name => 'github_repository_has_wiki_bool',
+	help => 'github_repository_has_wiki_bool Is the wiki enabled for this repository?',
+);
+
+my $repo_has_pages=$prom->gauge(
+	name => 'github_repository_has_pages_bool',
+	help => 'github_repository_has_pages_bool Are GitHub pages enabled?',
+);
+
+my $repo_forks=$prom->gauge(
+	name => 'github_repository_forks_count',
+	help => 'github_repository_forks_count Amount of existing forks',
+);
+
+my $repo_open_issues=$prom->gauge(
+	name => 'github_repository_open_issues_count',
+	help => 'github_repository_open_issues_count How many open issues exist',
+);
+
+my $repo_network_count=$prom->gauge(
+	name => 'github_repository_network_count',
+#	help => '#TODO What is this?',
+);
+
+my $repo_subscribers=$prom->gauge(
+	name => 'github_repository_subscribers_count',
+	help => 'github_repository_subscribers_count',
+);
 
 foreach my $repository (@{$config->{repositories}}) {
 	my $url="https://api.github.com/repos/$repository";
@@ -78,44 +122,58 @@ foreach my $repository (@{$config->{repositories}}) {
 	$repo_private->add(labels => "github_repository_private_bool{full_name=\"$decoded_json->{full_name}\"}",
 	                   value  => $decoded_json->{private});
 
-	$output .= "github_repository_forked_bool{full_name=\"$decoded_json->{full_name}\"} $decoded_json->{fork}\n";
+	$repo_forked->add(labels => "github_repository_private_bool{full_name=\"$decoded_json->{full_name}\"}",
+	                  value  => $decoded_json->{fork});
 
-	$output .= "github_repository_created_timestamp{full_name=\"$decoded_json->{full_name}\"} ".str2time($decoded_json->{created_at})."\n";
+	$repo_created->add(labels => "github_repository_created_timestamp{full_name=\"$decoded_json->{full_name}\"}",
+	            value  => str2time($decoded_json->{created_at}));
 
-	$output .= "github_repository_updated_timestamp{full_name=\"$decoded_json->{full_name}\"} ".str2time($decoded_json->{updated_at})."\n";
+	$repo_updated->add(labels => "github_repository_updated_timestamp{full_name=\"$decoded_json->{full_name}\"}",
+	            value  => str2time($decoded_json->{updated_at}));
 
-	$output .= "github_repository_pushed_timestamp{full_name=\"$decoded_json->{full_name}\"} ".str2time($decoded_json->{pushed_at})."\n";
+	$repo_pushed->add(labels => "github_repository_pushed_timestamp{full_name=\"$decoded_json->{full_name}\"}",
+	            value  => str2time($decoded_json->{pushed_at}));
 
-	$output .= "github_repository_size{full_name=\"$decoded_json->{full_name}\"} $decoded_json->{size}\n";
+	$repo_size->add(labels => "github_repository_size{full_name=\"$decoded_json->{full_name}\"}",
+	            value  => $decoded_json->{size});
 
-	$output .= "github_repository_stargazers_count{full_name=\"$decoded_json->{full_name}\"} $decoded_json->{stargazers_count}\n";
+	$repo_stargazers->add(labels => "github_repository_stargazers_count{full_name=\"$decoded_json->{full_name}\"}",
+	            value  => $decoded_json->{stargazers_count});
 
-	$output .= "github_repository_watchers_count{full_name=\"$decoded_json->{full_name}\"} $decoded_json->{watchers_count}\n";
+	$repo_watchers->add(labels => "github_repository_watchers_count{full_name=\"$decoded_json->{full_name}\"}",
+	            value  => $decoded_json->{watchers_count});
 
-	$output .= "github_repository_has_issues_bool{full_name=\"$decoded_json->{full_name}\"} $decoded_json->{has_issues}\n";
+	$repo_has_issues->add(labels => "github_repository_has_issues_bool{full_name=\"$decoded_json->{full_name}\"}",
+	            value  => $decoded_json->{has_issues});
 
-	$output .= "github_repository_has_downloads_bool{full_name=\"$decoded_json->{full_name}\"} $decoded_json->{has_downloads}\n";
+	$repo_has_downloads->add(labels => "github_repository_has_downloads_bool{full_name=\"$decoded_json->{full_name}\"}",
+	            value  => $decoded_json->{has_downloads});
 
-	$output .= "github_repository_has_wiki_bool{full_name=\"$decoded_json->{full_name}\"} $decoded_json->{has_wiki}\n";
+	$repo_has_wiki->add(labels => "github_repository_has_wiki_bool{full_name=\"$decoded_json->{full_name}\"}",
+	            value  => $decoded_json->{has_wiki});
 
-	$output .= "github_repository_has_pages_bool{full_name=\"$decoded_json->{full_name}\"} $decoded_json->{has_pages}\n";
+	$repo_has_pages->add(labels => "github_repository_has_pages_bool{full_name=\"$decoded_json->{full_name}\"}",
+	            value  => $decoded_json->{has_pages});
 
-	$output .= "github_repository_forks_count{full_name=\"$decoded_json->{full_name}\"} $decoded_json->{forks_count}\n";
+	$repo_forks->add(labels => "github_repository_forks_count{full_name=\"$decoded_json->{full_name}\"}",
+	            value  => $decoded_json->{forks_count});
 
-	$output .= "github_repository_open_issues_count{full_name=\"$decoded_json->{full_name}\"} $decoded_json->{open_issues_count}\n";
+	$repo_open_issues->add(labels => "github_repository_open_issues_count{full_name=\"$decoded_json->{full_name}\"}",
+	            value  => $decoded_json->{open_issues_count});
 
-	$output .= "github_repository_forks_count{full_name=\"$decoded_json->{full_name}\"} $decoded_json->{forks}\n";
+	$repo_network_count->add(labels => "github_repository_network_count{full_name=\"$decoded_json->{full_name}\"}",
+	            value  => $decoded_json->{network_count});
 
-	$output .= "github_repository_network_count{full_name=\"$decoded_json->{full_name}\"} $decoded_json->{network_count}\n";
-
-	$output .= "github_repository_subscribers_count{full_name=\"$decoded_json->{full_name}\"} $decoded_json->{subscribers_count}\n";
+	$repo_subscribers->add(labels => "github_repository_subscribers_count{full_name=\"$decoded_json->{full_name}\"}",
+	            value  => $decoded_json->{subscribers_count});
 }
 
-$output .= $repo_info->print;
-$output .= $repo_private->print;
+#$output .= $repo_info->print;
+#$output .= $repo_private->print;
 
+print $prom->content();
 
-print $output;
+#print $output;
 
 #my @curl = ('curl', '-X', 'POST', '--data-binary', $output, 'http://localhost:9091/metrics/job/github_exporter');
 #unless (system (@curl) == 0) {

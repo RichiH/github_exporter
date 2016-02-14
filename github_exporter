@@ -17,155 +17,159 @@ my $config = Config::YAML->new( config => "github_exporter.yml");
 
 my $prom = Prometheus->new();
 
-my $repo_info=$prom->gauge(
-	name => 'github_repository_info',
-	help => 'Information about repository',
-);
+get_repository_info() if defined $config->{repositories};
 
-my $repo_private=$prom->gauge(
-	name => 'github_repository_private_bool',
-	help => 'Is repository set to private?',
-);
+sub get_repository_info {
+	my $repo_info=$prom->gauge(
+		name => 'github_repository_info',
+		help => 'Information about repository',
+	);
 
-my $repo_forked=$prom->gauge(
-	name => 'github_repository_forked_bool',
-	help => 'Has repository been forked?',
-);
+	my $repo_private=$prom->gauge(
+		name => 'github_repository_private_bool',
+		help => 'Is repository set to private?',
+	);
 
-my $repo_created=$prom->gauge(
-	name => 'github_repository_created_timestamp',
-	help => 'github_repository_created_timestamp Epoch of repository creation',
-);
+	my $repo_forked=$prom->gauge(
+		name => 'github_repository_forked_bool',
+		help => 'Has repository been forked?',
+	);
 
-my $repo_updated=$prom->gauge(
-	name => 'github_repository_updated_timestamp',
-	help => 'github_repository_updated_timestamp Epoch of last repository update',
-);
+	my $repo_created=$prom->gauge(
+		name => 'github_repository_created_timestamp',
+		help => 'github_repository_created_timestamp Epoch of repository creation',
+	);
 
-my $repo_pushed=$prom->gauge(
-	name => 'github_repository_pushed_timestamp',
-	help => 'github_repository_pushed_timestamp Epoch of last push to repository',
-);
+	my $repo_updated=$prom->gauge(
+		name => 'github_repository_updated_timestamp',
+		help => 'github_repository_updated_timestamp Epoch of last repository update',
+	);
 
-my $repo_size=$prom->gauge(
-	name => 'github_repository_size',
-#	help => '#TODO What is this?',
-);
+	my $repo_pushed=$prom->gauge(
+		name => 'github_repository_pushed_timestamp',
+		help => 'github_repository_pushed_timestamp Epoch of last push to repository',
+	);
 
-my $repo_stargazers=$prom->gauge(
-	name => 'github_repository_stargazers_count',
-	help => 'github_repository_stargazers_count Count of people who starred a repository',
-);
+	my $repo_size=$prom->gauge(
+		name => 'github_repository_size',
+	#	help => '#TODO What is this?',
+	);
 
-my $repo_watchers=$prom->gauge(
-	name => 'github_repository_watchers_count',
-	help => 'github_repository_watchers_count Count of people who watch a repository',
-);
+	my $repo_stargazers=$prom->gauge(
+		name => 'github_repository_stargazers_count',
+		help => 'github_repository_stargazers_count Count of people who starred a repository',
+	);
 
-my $repo_has_issues=$prom->gauge(
-	name => 'github_repository_has_issues_bool',
-	help => 'github_repository_has_issues_bool Are issues enabled for this repository?',
-);
+	my $repo_watchers=$prom->gauge(
+		name => 'github_repository_watchers_count',
+		help => 'github_repository_watchers_count Count of people who watch a repository',
+	);
 
-my $repo_has_downloads=$prom->gauge(
-	name => 'github_repository_has_downloads_bool',
-	help => 'github_repository_has_downloads_bool Are downloads available for this repository?',
-);
+	my $repo_has_issues=$prom->gauge(
+		name => 'github_repository_has_issues_bool',
+		help => 'github_repository_has_issues_bool Are issues enabled for this repository?',
+	);
 
-my $repo_has_wiki=$prom->gauge(
-	name => 'github_repository_has_wiki_bool',
-	help => 'github_repository_has_wiki_bool Is the wiki enabled for this repository?',
-);
+	my $repo_has_downloads=$prom->gauge(
+		name => 'github_repository_has_downloads_bool',
+		help => 'github_repository_has_downloads_bool Are downloads available for this repository?',
+	);
 
-my $repo_has_pages=$prom->gauge(
-	name => 'github_repository_has_pages_bool',
-	help => 'github_repository_has_pages_bool Are GitHub pages enabled?',
-);
+	my $repo_has_wiki=$prom->gauge(
+		name => 'github_repository_has_wiki_bool',
+		help => 'github_repository_has_wiki_bool Is the wiki enabled for this repository?',
+	);
 
-my $repo_forks=$prom->gauge(
-	name => 'github_repository_forks_count',
-	help => 'github_repository_forks_count Amount of existing forks',
-);
+	my $repo_has_pages=$prom->gauge(
+		name => 'github_repository_has_pages_bool',
+		help => 'github_repository_has_pages_bool Are GitHub pages enabled?',
+	);
 
-my $repo_open_issues=$prom->gauge(
-	name => 'github_repository_open_issues_count',
-	help => 'github_repository_open_issues_count How many open issues exist',
-);
+	my $repo_forks=$prom->gauge(
+		name => 'github_repository_forks_count',
+		help => 'github_repository_forks_count Amount of existing forks',
+	);
 
-my $repo_network_count=$prom->gauge(
-	name => 'github_repository_network_count',
-#	help => '#TODO What is this?',
-);
+	my $repo_open_issues=$prom->gauge(
+		name => 'github_repository_open_issues_count',
+		help => 'github_repository_open_issues_count How many open issues exist',
+	);
 
-my $repo_subscribers=$prom->gauge(
-	name => 'github_repository_subscribers_count',
-	help => 'github_repository_subscribers_count',
-);
+	my $repo_network_count=$prom->gauge(
+		name => 'github_repository_network_count',
+	#	help => '#TODO What is this?',
+	);
 
-foreach my $repository (@{$config->{repositories}}) {
-	my $url="https://api.github.com/repos/$repository";
-	my $json = get($url);
+	my $repo_subscribers=$prom->gauge(
+		name => 'github_repository_subscribers_count',
+		help => 'github_repository_subscribers_count',
+	);
 
-	#TODO count up errors instead of dying once this becomes a daemon
-	die "Could not get $url: $!" unless defined $json;
-	my $decoded_json = decode_json( $json );
+	foreach my $repository (@{$config->{repositories}}) {
+		my $url="https://api.github.com/repos/$repository";
+		my $json = get($url);
 
-	$repo_info->set(labels =>
-	                         "repository_full_name=\"$decoded_json->{full_name}\""
-	                        .",repository_name=\"$decoded_json->{name}\""
-	                        .",repository_description=\"$decoded_json->{description}\""
-	                        .",owner_name=\"$decoded_json->{owner}{login}\""
-	                        .",owner_id=\"$decoded_json->{owner}{id}\"",
-	                value => $decoded_json->{id}
-	           );
+		#TODO count up errors instead of dying once this becomes a daemon
+		die "Could not get $url: $!" unless defined $json;
+		my $decoded_json = decode_json( $json );
 
-	$repo_private->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	                   value  => $decoded_json->{private});
+		$repo_info->set(labels =>
+		                         "repository_full_name=\"$decoded_json->{full_name}\""
+		                        .",repository_name=\"$decoded_json->{name}\""
+		                        .",repository_description=\"$decoded_json->{description}\""
+		                        .",owner_name=\"$decoded_json->{owner}{login}\""
+		                        .",owner_id=\"$decoded_json->{owner}{id}\"",
+		                value => $decoded_json->{id}
+		           );
 
-	$repo_forked->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	                  value  => $decoded_json->{fork});
+		$repo_private->set(labels => "full_name=\"$decoded_json->{full_name}\"",
+		                   value  => $decoded_json->{private});
 
-	$repo_created->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	                   value  => str2time($decoded_json->{created_at}));
+		$repo_forked->set(labels => "full_name=\"$decoded_json->{full_name}\"",
+		                  value  => $decoded_json->{fork});
 
-	$repo_updated->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	                   value  => str2time($decoded_json->{updated_at}));
+		$repo_created->set(labels => "full_name=\"$decoded_json->{full_name}\"",
+		                   value  => str2time($decoded_json->{created_at}));
 
-	$repo_pushed->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	                  value  => str2time($decoded_json->{pushed_at}));
+		$repo_updated->set(labels => "full_name=\"$decoded_json->{full_name}\"",
+		                   value  => str2time($decoded_json->{updated_at}));
 
-	$repo_size->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	                value  => $decoded_json->{size});
+		$repo_pushed->set(labels => "full_name=\"$decoded_json->{full_name}\"",
+		                  value  => str2time($decoded_json->{pushed_at}));
 
-	$repo_stargazers->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	                      value  => $decoded_json->{stargazers_count});
+		$repo_size->set(labels => "full_name=\"$decoded_json->{full_name}\"",
+		                value  => $decoded_json->{size});
 
-	$repo_watchers->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	                    value  => $decoded_json->{watchers_count});
+		$repo_stargazers->set(labels => "full_name=\"$decoded_json->{full_name}\"",
+		                      value  => $decoded_json->{stargazers_count});
 
-	$repo_has_issues->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	                      value  => $decoded_json->{has_issues});
+		$repo_watchers->set(labels => "full_name=\"$decoded_json->{full_name}\"",
+		                    value  => $decoded_json->{watchers_count});
 
-	$repo_has_downloads->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	                         value  => $decoded_json->{has_downloads});
+		$repo_has_issues->set(labels => "full_name=\"$decoded_json->{full_name}\"",
+		                      value  => $decoded_json->{has_issues});
 
-	$repo_has_wiki->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	                    value  => $decoded_json->{has_wiki});
+		$repo_has_downloads->set(labels => "full_name=\"$decoded_json->{full_name}\"",
+		                         value  => $decoded_json->{has_downloads});
 
-	$repo_has_pages->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	                     value  => $decoded_json->{has_pages});
+		$repo_has_wiki->set(labels => "full_name=\"$decoded_json->{full_name}\"",
+		                    value  => $decoded_json->{has_wiki});
 
-	$repo_forks->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	                 value  => $decoded_json->{forks_count});
+		$repo_has_pages->set(labels => "full_name=\"$decoded_json->{full_name}\"",
+		                     value  => $decoded_json->{has_pages});
 
-	$repo_open_issues->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	                       value  => $decoded_json->{open_issues_count});
+		$repo_forks->set(labels => "full_name=\"$decoded_json->{full_name}\"",
+		                 value  => $decoded_json->{forks_count});
 
-	$repo_network_count->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	                         value  => $decoded_json->{network_count});
+		$repo_open_issues->set(labels => "full_name=\"$decoded_json->{full_name}\"",
+		                       value  => $decoded_json->{open_issues_count});
 
-	$repo_subscribers->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	                       value  => $decoded_json->{subscribers_count});
+		$repo_network_count->set(labels => "full_name=\"$decoded_json->{full_name}\"",
+		                         value  => $decoded_json->{network_count});
+
+		$repo_subscribers->set(labels => "full_name=\"$decoded_json->{full_name}\"",
+		                       value  => $decoded_json->{subscribers_count});
+	}
 }
 
 print $prom->content();

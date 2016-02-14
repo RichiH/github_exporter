@@ -126,50 +126,47 @@ foreach my $repository (@{$config->{repositories}}) {
 	                  value  => $decoded_json->{fork});
 
 	$repo_created->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	            value  => str2time($decoded_json->{created_at}));
+	                   value  => str2time($decoded_json->{created_at}));
 
 	$repo_updated->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	            value  => str2time($decoded_json->{updated_at}));
+	                   value  => str2time($decoded_json->{updated_at}));
 
 	$repo_pushed->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	            value  => str2time($decoded_json->{pushed_at}));
+	                  value  => str2time($decoded_json->{pushed_at}));
 
 	$repo_size->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	            value  => $decoded_json->{size});
+	                value  => $decoded_json->{size});
 
 	$repo_stargazers->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	            value  => $decoded_json->{stargazers_count});
+	                      value  => $decoded_json->{stargazers_count});
 
 	$repo_watchers->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	            value  => $decoded_json->{watchers_count});
+	                    value  => $decoded_json->{watchers_count});
 
 	$repo_has_issues->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	            value  => $decoded_json->{has_issues});
+	                      value  => $decoded_json->{has_issues});
 
 	$repo_has_downloads->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	            value  => $decoded_json->{has_downloads});
+	                         value  => $decoded_json->{has_downloads});
 
 	$repo_has_wiki->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	            value  => $decoded_json->{has_wiki});
+	                    value  => $decoded_json->{has_wiki});
 
 	$repo_has_pages->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	            value  => $decoded_json->{has_pages});
+	                     value  => $decoded_json->{has_pages});
 
 	$repo_forks->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	            value  => $decoded_json->{forks_count});
+	                 value  => $decoded_json->{forks_count});
 
 	$repo_open_issues->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	            value  => $decoded_json->{open_issues_count});
+	                       value  => $decoded_json->{open_issues_count});
 
 	$repo_network_count->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	            value  => $decoded_json->{network_count});
+	                         value  => $decoded_json->{network_count});
 
 	$repo_subscribers->set(labels => "full_name=\"$decoded_json->{full_name}\"",
-	            value  => $decoded_json->{subscribers_count});
+	                       value  => $decoded_json->{subscribers_count});
 }
-
-#$output .= $repo_info->print;
-#$output .= $repo_private->print;
 
 print $prom->content();
 

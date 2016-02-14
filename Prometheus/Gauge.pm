@@ -6,6 +6,7 @@ use diagnostics;
 
 use Data::Dumper;
 
+
 # TODO track internal errors
 
 sub new {
@@ -27,7 +28,7 @@ sub add {
 	my %options = @_;
 
 	die "Value '$options{value}' is empty\n" unless defined $options{value};
-	die "Value '$options{value}' is not a float\n" unless $options{value} =~ /^[+-]?(?=\.?\d)\d*\.?\d*(?:e[+-]?\d+)?\z/i;
+	die "Value '$options{value}' is not a float\n" unless $options{value} =~ /^  [+-]? ( (\d+ (\.\d*)?)  |  (\.\d+) ) $/x;
 
 	$self->{text} .= $self->{name}. "{". $options{labels}. "} $options{value}\n";
 }

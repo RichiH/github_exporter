@@ -115,7 +115,7 @@ foreach my $repository (@{$config->{repositories}}) {
 	                        .",repository_name=\"$decoded_json->{name}\""
 	                        .",repository_description=\"$decoded_json->{description}\""
 	                        .",owner_name=\"$decoded_json->{owner}{login}\""
-	                        .",owner_id=\"$decoded_json->{owner}{id}",
+	                        .",owner_id=\"$decoded_json->{owner}{id}\"",
 	                value => $decoded_json->{id}
 	           );
 
